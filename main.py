@@ -17,35 +17,68 @@ characters = ["Ahri", "Yasuo", "Darius", "Illaoi", "Jinx", "Nautilus"]
 selected_character = tk.StringVar(value=characters[0])
 dropdown = ttk.Combobox(charWindow, textvariable=selected_character, values=characters)
 dropdown.pack()
-def start_game():
-    def rollDiceAttack():
+
+
+def start_game(botMaxHealth, botName):
+    def rollDiceAttackTower():
         global currentTower
-        botRoll = random.randint(1,12)
+        botRoll = random.randint(1, 12)
         damage = int(rollText.get()) - botRoll
         if damage <= 0:
             damage = 0
-        health["value"] -= 6.65*(damage)
-        mainLabel1.config(text="You are currently at Tower " + str(currentTower) + "\nBot Rolled: " + str(botRoll) + "\nDamage Done: " + str(damage) + "\nHealth:" + str(int(health["value"]/(20/3))) + "/15")
+        towerHealth["value"] -= 6.65 * damage
+        if towerHealth["value"] < 0:
+            towerHealth["value"] = 0
+        mainLabel1.config(text="You are currently attacking Tower " + str(currentTower) + "\nBot Rolled: " + str(
+            botRoll) + "\nDamage Done: " + str(damage) + "\nHealth:" + str(int(towerHealth["value"] / (20 / 3))) + "/15")
+        towerLabel.config(text="Tower Health: " + str(int(towerHealth["value"] / (20 / 3))) + "/15")
         mainLabel1.pack()
-        if(int(health["value"]) <= 0):
-            if(currentTower==3):
+        if int(towerHealth["value"]) == 0:
+            if currentTower == 3:
                 mainLabel1.config(text="You are winner")
                 attackButton.destroy()
             else:
                 mainLabel1.config(text="You have killed Tower " + str(currentTower) + ".")
                 currentTower += 1
-                health["value"] = 100
+                towerHealth["value"] = 100
+        attackButton.config(command=rollDiceAttack)
+        botHealth["value"] = 100
+
+    def rollDiceAttack():
+        botRoll = random.randint(1, 12)
+        damage = int(rollText.get()) - botRoll
+        if damage <= 0:
+            damage = 0
+        botHealth["value"] -= (100/botMaxHealth) * damage
+        mainLabel1.config(text="You are currently attacking " + str(botName) + "\nBot Rolled: " + str(
+            botRoll) + "\nDamage Done: " + str(damage) + "\nHealth:" + str(
+            int(botHealth["value"] / (100/botMaxHealth))) + "/" + str(botMaxHealth))
+        mainLabel1.pack()
+        if int(botHealth["value"]) <= 0:
+            mainLabel1.config(text="You have killed " + botName + ".\nPress Attack to attack the next tower.")
+            attackButton.config(command=rollDiceAttackTower)
 
     global currentTower
     currentTower = 1
     mainWindow = tk.Tk()
     mainWindow.title("The game(TM)")
     mainWindow.geometry("400x200")
-    mainLabel1 = tk.Label(mainWindow, text="You are currently at Tower 1\nHealth:15/15")
+    mainLabel1 = tk.Label(mainWindow, text="You are currently attacking " + botName)
     mainLabel1.pack()
-    health = ttk.Progressbar(mainWindow, length=200, mode='determinate')
-    health["value"] = 100
-    health.pack()
+    botFrame = tk.Frame(mainWindow)
+    botFrame.pack()
+    botLabel = tk.Label(botFrame, text="Bot Health: " + str(botMaxHealth) + "/" + str(botMaxHealth))
+    botLabel.pack()
+    botHealth = ttk.Progressbar(botFrame, length=200, mode='determinate')
+    botHealth["value"] = 100
+    botHealth.pack()
+    towerFrame = tk.Frame(mainWindow)
+    towerFrame.pack()
+    towerLabel = tk.Label(towerFrame, text="Tower Health: 15/15")
+    towerLabel.pack()
+    towerHealth = ttk.Progressbar(towerFrame, length=200, mode='determinate')
+    towerHealth["value"] = 100
+    towerHealth.pack()
 
     button_frame = tk.Frame(mainWindow)
     button_frame.pack()
@@ -53,7 +86,7 @@ def start_game():
     rollText = tk.Entry(button_frame)
     rollText.pack()
 
-    attackButton = tk.Button(button_frame, text="Attack",command=rollDiceAttack)
+    attackButton = tk.Button(button_frame, text="Attack", command=rollDiceAttack)
     attackButton.pack(side=tk.LEFT)
 
     button_frame.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
@@ -84,7 +117,7 @@ def select_character():
             health = 10
         case _:
             print()
-    start_game()
+    start_game(health, selected)
 
 
 # Create a button to trigger the selection
